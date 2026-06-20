@@ -202,7 +202,7 @@ function listenToDraft() {
         });
     });
 
-    // === دالة مساعدة لضمان ظهور الفرق بالترتيب الصحيح فوراً ===
+   // === دالة تحديث واجهة الفرق (مع إضافة رقم الموبايل) ===
     function renderTeamsUI() {
         db.ref('captains').once('value').then(capSnapshot => {
             db.ref('draftState').once('value').then(stateSnap => {
@@ -218,16 +218,20 @@ function listenToDraft() {
                     const teams = teamsSnapshot.val() || {};
                     const assignments = state.teamNames || {};
 
-                    // استخراج الترتيب العشوائي للفرق من الـ Sequence لعرض الفريق 1 ثم 2 ثم 3
-                    const numCaptains = Object.keys(captains).length;
-                    const randomOrderIds = state.sequence.slice(0, numCaptains);
+                    // الترتيب بناءً على sequence اللي حددناه في خوارزمية الأدوار
+                    state.sequence.forEach(id => {
+                        // نتأكد إن الكابتن موجود في البيانات
+                        if (!captains[id]) return;
 
-                    randomOrderIds.forEach(id => {
                         let players = Object.values(teams[id] || {}).map(p => `<li>⚽ ${p.name}</li>`).join('');
+                        
                         container.innerHTML += `
                             <div class="team-card">
-                                <h4>${assignments[id] || "فريق"}: ${captains[id].name}</h4>
-                                <ul>${players || '<li class="no-players">بانتظار الاختيار..</li>'}</ul>
+                                <div style="border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 10px;">
+                                    <h4 style="margin: 0; color: #2d3748;">${assignments[id] || "فريق"}: ${captains[id].name}</h4>
+                                    <span style="font-size: 14px; color: #718096;">📞 ${captains[id].phone}</span>
+                                </div>
+                                <ul style="list-style: none; padding: 0;">${players || '<li style="color: #a0aec0; font-size: 13px;">بانتظار الاختيار..</li>'}</ul>
                             </div>`;
                     });
                 });
